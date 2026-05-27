@@ -5,11 +5,11 @@ export class ProductRepository {
     this.table = 'products';
   }
 
-  async findAll() {
+  findAll() {
     return db(this.table).select('*').orderBy('id', 'asc');
   }
 
-  async findById(id) {
+  findById(id) {
     return db(this.table).where({ id }).first();
   }
 
@@ -23,7 +23,7 @@ export class ProductRepository {
     return row;
   }
 
-  async remove(id) {
+  remove(id) {
     return db(this.table).where({ id }).delete();
   }
 }

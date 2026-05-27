@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import productRoutes from './routes/product.routes.js';
+import { HttpException } from './exceptions/http.exception.js';
 
 const app = express();
 
@@ -10,8 +11,10 @@ app.use(express.json());
 app.use('/api/products', productRoutes);
 
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal Server Error' });
+  const isHttp = err instanceof HttpException;
+  const status = isHttp ? err.status : 500;
+  const message = isHttp ? err.message : 'Internal Server Error';
+  res.status(status).json({ error: message });
 });
 
 export default app;

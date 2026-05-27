@@ -24,8 +24,11 @@ export class ProductService {
 
   async update(id, data) {
     await this.getById(id);
-    const { name, price, stock } = data;
-    return this.repo.update(id, { name, price, stock });
+    const fields = {};
+    if (data.name !== undefined) fields.name = data.name;
+    if (data.price !== undefined) fields.price = data.price;
+    if (data.stock !== undefined) fields.stock = data.stock;
+    return this.repo.update(id, fields);
   }
 
   async remove(id) {

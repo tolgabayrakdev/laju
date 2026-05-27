@@ -1,14 +1,14 @@
-import 'dotenv/config';
+import { env } from './src/config/env.js';
 
 /** @type {import('knex').Knex.Config} */
 export default {
   client: 'pg',
   connection: {
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 5432,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'laju_db',
+    host: env.db.host,
+    port: env.db.port,
+    user: env.db.user,
+    password: env.db.password,
+    database: env.db.name,
   },
   migrations: {
     directory: './migrations',

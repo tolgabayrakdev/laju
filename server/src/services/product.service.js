@@ -2,8 +2,8 @@ import { ProductRepository } from '../repositories/product.repository.js';
 import { HttpException } from '../exceptions/http.exception.js';
 
 export class ProductService {
-  constructor() {
-    this.repo = new ProductRepository();
+  constructor(repo = new ProductRepository()) {
+    this.repo = repo;
   }
 
   async getAll() {

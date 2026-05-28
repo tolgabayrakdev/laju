@@ -1,8 +1,8 @@
 import { ProductService } from '../services/product.service.js';
 
 export class ProductController {
-  constructor() {
-    this.service = new ProductService();
+  constructor(service = new ProductService()) {
+    this.service = service;
   }
 
   getAll = async (req, res, next) => {

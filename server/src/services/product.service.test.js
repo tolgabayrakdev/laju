@@ -1,18 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductService } from '../services/product.service.js';
-import { ProductRepository } from '../repositories/product.repository.js';
 import { HttpException } from '../exceptions/http.exception.js';
-
-vi.mock('../repositories/product.repository.js');
 
 describe('ProductService', () => {
   let service;
   let repo;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    service = new ProductService();
-    repo = vi.mocked(service.repo);
+    repo = {
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+    };
+    service = new ProductService(repo);
   });
 
   describe('getAll', () => {
@@ -85,7 +87,7 @@ describe('ProductService', () => {
       await expect(service.update(99, { price: 10 })).rejects.toMatchObject({ status: 404 });
     });
 
-    it('undefined field\'ları göndermez', async () => {
+    it("undefined field'ları göndermez", async () => {
       const existing = { id: 1, name: 'Kalem', price: 5, stock: 10 };
       repo.findById.mockResolvedValue(existing);
       repo.update.mockResolvedValue(existing);

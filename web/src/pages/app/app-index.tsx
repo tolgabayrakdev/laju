@@ -1,0 +1,32 @@
+import { useNavigate } from 'react-router'
+import { useMutation } from '@tanstack/react-query'
+import { useAuthStore } from '@/store/auth.store'
+import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+
+export default function AppIndex() {
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  const clearUser = useAuthStore((s) => s.clearUser)
+
+  const { mutate: logout, isPending } = useMutation({
+    mutationFn: () => api.post('/api/auth/logout', {}),
+    onSuccess: () => {
+      clearUser()
+      navigate('/sign-in', { replace: true })
+    },
+  })
+
+  return (
+    <div className="p-8 space-y-4">
+      <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">laju</p>
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">Hoş geldin, {user?.name}</h1>
+        <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
+      </div>
+      <Button variant="outline" size="sm" disabled={isPending} onClick={() => logout()}>
+        {isPending ? 'Çıkış yapılıyor…' : 'Çıkış yap'}
+      </Button>
+    </div>
+  )
+}

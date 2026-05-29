@@ -27,7 +27,7 @@ export default function SignUp() {
     mutate(form)
   }
 
-  const errorMessage = matchError ?? (error as Error | null)?.message
+  const errorMessage = matchError ?? error?.message
 
   if (isSuccess) {
     return (

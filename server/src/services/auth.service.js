@@ -1,8 +1,11 @@
+import crypto from 'crypto';
 import { UserRepository } from '../repositories/user.repository.js';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository.js';
 import { HttpException } from '../exceptions/http.exception.js';
 import { signToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
+import { sendPasswordResetEmail } from '../utils/email.js';
+import { env } from '../config/env.js';
 
 export class AuthService {
   constructor(repo = new UserRepository(), refreshTokenRepo = new RefreshTokenRepository()) {
@@ -65,6 +68,48 @@ export class AuthService {
 
   async logout(refreshToken) {
     await this.refreshTokenRepo.deleteByToken(refreshToken);
+  }
+
+  async forgotPassword(email) {
+    const user = await this.repo.findByEmail(email);
+    if (!user) return; // enumeration önleme — hata fırlatma
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 saat
+
+    await this.repo.saveResetToken(user.id, tokenHash, expiresAt);
+
+    const resetUrl = `${env.frontendUrl}/reset-password?token=${rawToken}`;
+    await sendPasswordResetEmail(user.email, resetUrl);
+  }
+
+  async verifyResetToken(rawToken) {
+    if (!rawToken) throw new HttpException(400, 'token is required');
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const user = await this.repo.findByResetToken(tokenHash);
+
+    if (!user || !user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
+      throw new HttpException(400, 'Invalid or expired reset token');
+    }
+  }
+
+  async resetPassword(rawToken, newPassword) {
+    if (!rawToken || !newPassword) {
+      throw new HttpException(400, 'token and password are required');
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const user = await this.repo.findByResetToken(tokenHash);
+
+    if (!user || !user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
+      throw new HttpException(400, 'Invalid or expired reset token');
+    }
+
+    const hashed = await hashPassword(newPassword);
+    await this.repo.updatePassword(user.id, hashed);
+    await this.repo.clearResetToken(user.id);
   }
 
   async #issueTokens(user) {

@@ -13,8 +13,13 @@ vi.mock('../utils/password.js', () => ({
   comparePassword: vi.fn(),
 }));
 
+vi.mock('../utils/email.js', () => ({
+  sendPasswordResetEmail: vi.fn(),
+}));
+
 import { signToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
+import { sendPasswordResetEmail } from '../utils/email.js';
 
 describe('AuthService', () => {
   let service;
@@ -36,6 +41,10 @@ describe('AuthService', () => {
       findByEmail: vi.fn(),
       findById: vi.fn(),
       create: vi.fn(),
+      saveResetToken: vi.fn(),
+      findByResetToken: vi.fn(),
+      updatePassword: vi.fn(),
+      clearResetToken: vi.fn(),
     };
 
     refreshTokenRepo = {
@@ -175,6 +184,102 @@ describe('AuthService', () => {
       await service.logout('mock_refresh_token');
 
       expect(refreshTokenRepo.deleteByToken).toHaveBeenCalledWith('mock_refresh_token');
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('kayıtlı email için token kaydeder ve email gönderir', async () => {
+      repo.findByEmail.mockResolvedValue(mockUser);
+      repo.saveResetToken.mockResolvedValue();
+      sendPasswordResetEmail.mockResolvedValue();
+
+      await service.forgotPassword('ali@test.com');
+
+      expect(repo.saveResetToken).toHaveBeenCalledWith(
+        mockUser.id,
+        expect.any(String),
+        expect.any(Date)
+      );
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
+        mockUser.email,
+        expect.stringContaining('/reset-password?token=')
+      );
+    });
+
+    it('kayıtsız email için hata fırlatmaz, email göndermez', async () => {
+      repo.findByEmail.mockResolvedValue(undefined);
+
+      await expect(service.forgotPassword('yok@test.com')).resolves.toBeUndefined();
+      expect(sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyResetToken', () => {
+    it('geçerli ve süresi dolmamış token ile resolve eder', async () => {
+      repo.findByResetToken.mockResolvedValue({
+        ...mockUser,
+        reset_token_expires: new Date(Date.now() + 60 * 60 * 1000),
+      });
+
+      await expect(service.verifyResetToken('gecerlitoken')).resolves.toBeUndefined();
+    });
+
+    it('token yoksa 400 fırlatır', async () => {
+      await expect(service.verifyResetToken(undefined)).rejects.toMatchObject({ status: 400 });
+    });
+
+    it('DB de bulunamazsa 400 fırlatır', async () => {
+      repo.findByResetToken.mockResolvedValue(undefined);
+
+      await expect(service.verifyResetToken('gecersiz')).rejects.toMatchObject({ status: 400 });
+    });
+
+    it('süresi dolmuşsa 400 fırlatır', async () => {
+      repo.findByResetToken.mockResolvedValue({
+        ...mockUser,
+        reset_token_expires: new Date(Date.now() - 1000),
+      });
+
+      await expect(service.verifyResetToken('suresi_dolmus')).rejects.toMatchObject({ status: 400 });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('geçerli token ile şifreyi günceller ve token temizler', async () => {
+      repo.findByResetToken.mockResolvedValue({
+        ...mockUser,
+        reset_token_expires: new Date(Date.now() + 60 * 60 * 1000),
+      });
+      repo.updatePassword.mockResolvedValue();
+      repo.clearResetToken.mockResolvedValue();
+
+      await service.resetPassword('gecerlitoken', 'yenisifre123');
+
+      expect(hashPassword).toHaveBeenCalledWith('yenisifre123');
+      expect(repo.updatePassword).toHaveBeenCalledWith(mockUser.id, 'hashed_password');
+      expect(repo.clearResetToken).toHaveBeenCalledWith(mockUser.id);
+    });
+
+    it('token veya password eksikse 400 fırlatır', async () => {
+      await expect(service.resetPassword(undefined, 'sifre')).rejects.toMatchObject({ status: 400 });
+      await expect(service.resetPassword('token', undefined)).rejects.toMatchObject({ status: 400 });
+    });
+
+    it('token DB de bulunamazsa 400 fırlatır', async () => {
+      repo.findByResetToken.mockResolvedValue(undefined);
+
+      await expect(service.resetPassword('gecersiz', 'yenisifre')).rejects.toMatchObject({ status: 400 });
+    });
+
+    it('token süresi dolmuşsa 400 fırlatır', async () => {
+      repo.findByResetToken.mockResolvedValue({
+        ...mockUser,
+        reset_token_expires: new Date(Date.now() - 1000),
+      });
+
+      await expect(service.resetPassword('suresi_dolmus', 'yenisifre')).rejects.toMatchObject({
+        status: 400,
+      });
     });
   });
 });

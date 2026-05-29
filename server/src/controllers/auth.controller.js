@@ -66,4 +66,31 @@ export class AuthController {
       next(err);
     }
   };
+
+  verifyResetToken = async (req, res, next) => {
+    try {
+      await this.service.verifyResetToken(req.query?.token);
+      res.json({ valid: true });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  forgotPassword = async (req, res, next) => {
+    try {
+      await this.service.forgotPassword(req.body?.email);
+      res.json({ message: 'If that email exists, a reset link has been sent' });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  resetPassword = async (req, res, next) => {
+    try {
+      await this.service.resetPassword(req.body?.token, req.body?.password);
+      res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

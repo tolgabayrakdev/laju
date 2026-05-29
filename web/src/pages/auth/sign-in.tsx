@@ -1,12 +1,33 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { useMutation } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { api } from '@/lib/api'
+import { useAuthStore } from '@/store/auth.store'
 
 export default function SignIn() {
+  const navigate = useNavigate()
+  const setUser = useAuthStore((s) => s.setUser)
+
+  const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: (payload: typeof form) =>
+      api.post<{ user: { id: number; name: string; email: string; created_at: string } }>('/api/auth/login', payload),
+    onSuccess: ({ user }) => {
+      setUser(user)
+      navigate('/', { replace: true })
+    },
+  })
+
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault()
+    mutate(form)
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
@@ -18,10 +39,18 @@ export default function SignIn() {
           <p className="text-xs text-muted-foreground">Devam etmek için hesabına giriş yap.</p>
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-1.5">
             <Label htmlFor="email">E-posta</Label>
-            <Input id="email" type="email" placeholder="ornek@sirket.com" autoComplete="email" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="ornek@sirket.com"
+              autoComplete="email"
+              value={form.email}
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              required
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -32,17 +61,30 @@ export default function SignIn() {
               </Link>
             </div>
             <div className="relative">
-              <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
-                autoComplete="current-password" className="pr-8" />
-              <button type="button" onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="pr-8"
+                value={form.password}
+                onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </div>
           </div>
 
-          <Button type="submit" className="w-full mt-2">
-            Giriş yap
+          {error && <p className="text-xs text-destructive">{error.message}</p>}
+
+          <Button type="submit" className="w-full mt-2" disabled={isPending}>
+            {isPending ? 'Giriş yapılıyor…' : 'Giriş yap'}
           </Button>
         </form>
 

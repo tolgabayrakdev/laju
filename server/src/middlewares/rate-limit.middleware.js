@@ -30,3 +30,12 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
   ...rateLimitResponse('Too many accounts created, please try again in 1 hour'),
 });
+
+// Spam koruması: forgot-password
+export const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  ...rateLimitResponse('Too many password reset requests, please try again in 1 hour'),
+});

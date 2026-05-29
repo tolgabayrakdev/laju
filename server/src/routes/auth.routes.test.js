@@ -134,4 +134,96 @@ describe('Auth Routes', () => {
       expect(res.body).toEqual({ message: 'Logged out successfully' });
     });
   });
+
+  describe('GET /api/auth/verify-reset-token', () => {
+    it('token geçerliyse 200 döner', async () => {
+      service.verifyResetToken.mockResolvedValue();
+
+      const res = await request(app).get('/api/auth/verify-reset-token?token=gecerlitoken');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ valid: true });
+    });
+
+    it('token geçersiz veya süresi dolmuşsa 400 döner', async () => {
+      service.verifyResetToken.mockRejectedValue(
+        new HttpException(400, 'Invalid or expired reset token')
+      );
+
+      const res = await request(app).get('/api/auth/verify-reset-token?token=gecersiztoken');
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid or expired reset token' });
+    });
+
+    it('token parametresi yoksa 400 döner', async () => {
+      service.verifyResetToken.mockRejectedValue(
+        new HttpException(400, 'token is required')
+      );
+
+      const res = await request(app).get('/api/auth/verify-reset-token');
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/auth/forgot-password', () => {
+    it('email kayıtlı olsa da olmasa da 200 döner', async () => {
+      service.forgotPassword.mockResolvedValue();
+
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'ali@test.com' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ message: 'If that email exists, a reset link has been sent' });
+    });
+
+    it('servis hata fırlatırsa 500 döner', async () => {
+      service.forgotPassword.mockRejectedValue(new Error('smtp error'));
+
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'ali@test.com' });
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('POST /api/auth/reset-password', () => {
+    it('token ve şifre geçerliyse 200 döner', async () => {
+      service.resetPassword.mockResolvedValue();
+
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({ token: 'gecerlitoken', password: 'yenisifre123' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ message: 'Password updated successfully' });
+    });
+
+    it('token geçersiz veya süresi dolmuşsa 400 döner', async () => {
+      service.resetPassword.mockRejectedValue(
+        new HttpException(400, 'Invalid or expired reset token')
+      );
+
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({ token: 'gecersiz', password: 'yenisifre123' });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid or expired reset token' });
+    });
+
+    it('alan eksikse 400 döner', async () => {
+      service.resetPassword.mockRejectedValue(
+        new HttpException(400, 'token and password are required')
+      );
+
+      const res = await request(app).post('/api/auth/reset-password').send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: 'token and password are required' });
+    });
+  });
 });

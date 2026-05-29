@@ -18,6 +18,14 @@ export default function AppIndex() {
     },
   })
 
+  if (isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xs text-muted-foreground">Çıkış yapılıyor…</p>
+      </div>
+    )
+  }
+
   return (
     <div className="p-8 space-y-4">
       <div className="flex items-center justify-between">
@@ -29,7 +37,7 @@ export default function AppIndex() {
         <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
       </div>
       <Button variant="outline" size="sm" disabled={isPending} onClick={() => logout()}>
-        {isPending ? 'Çıkış yapılıyor…' : 'Çıkış yap'}
+        Çıkış yap
       </Button>
     </div>
   )

@@ -10,7 +10,7 @@ import { apiLimiter } from './middlewares/rate-limit.middleware.js';
 const app = express();
 
 app.use(cors());
-app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use('/api', apiLimiter);
 

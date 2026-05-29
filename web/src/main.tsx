@@ -9,6 +9,7 @@ import SignUp from './pages/auth/sign-up.tsx'
 import ForgotPassword from './pages/auth/forgot-password.tsx'
 import ResetPassword from './pages/auth/reset-password.tsx'
 import AppLayout from './layouts/app-layout.tsx'
+import GuestLayout from './layouts/guest-layout.tsx'
 import GlobalLoader from './components/global-loader.tsx'
 import AppIndex from './pages/app/app-index.tsx'
 import Settings from './pages/app/settings.tsx'
@@ -16,10 +17,15 @@ import Settings from './pages/app/settings.tsx'
 const queryClient = new QueryClient()
 
 const router = createBrowserRouter([
-  { path: '/sign-in', element: <SignIn /> },
-  { path: '/sign-up', element: <SignUp /> },
-  { path: '/forgot-password', element: <ForgotPassword /> },
-  { path: '/reset-password', element: <ResetPassword /> },
+  {
+    element: <GuestLayout />,
+    children: [
+      { path: '/sign-in', element: <SignIn /> },
+      { path: '/sign-up', element: <SignUp /> },
+      { path: '/forgot-password', element: <ForgotPassword /> },
+      { path: '/reset-password', element: <ResetPassword /> },
+    ],
+  },
   {
     element: <AppLayout />,
     children: [

@@ -48,10 +48,9 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('geçerli data ile kayıt olur, access ve refresh token döner', async () => {
+    it('geçerli data ile kayıt olur, başarı mesajı döner', async () => {
       repo.findByEmail.mockResolvedValue(undefined);
       repo.create.mockResolvedValue(mockUser);
-      refreshTokenRepo.save.mockResolvedValue({});
 
       const result = await service.register({
         name: 'Ali',
@@ -65,11 +64,7 @@ describe('AuthService', () => {
         email: 'ali@test.com',
         password: 'hashed_password',
       });
-      expect(result).toMatchObject({
-        access_token: 'mock_access_token',
-        refresh_token: 'mock_refresh_token',
-      });
-      expect(result.user).not.toHaveProperty('password');
+      expect(result).toEqual({ message: 'Account created successfully' });
     });
 
     it('name eksikse 400 fırlatır', async () => {

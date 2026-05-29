@@ -19,9 +19,9 @@ export class AuthService {
     if (existing) throw new HttpException(409, 'Email already in use');
 
     const hashed = await hashPassword(password);
-    const user = await this.repo.create({ name, email, password: hashed });
+    await this.repo.create({ name, email, password: hashed });
 
-    return this.#issueTokens(user);
+    return { message: 'Account created successfully' };
   }
 
   async login({ email, password }) {
@@ -51,10 +51,16 @@ export class AuthService {
 
     await this.refreshTokenRepo.deleteByToken(refreshToken);
 
-    const user = await this.repo.findById(payload.sub);
+    const user = await this.repo.findById(payload.id);
     if (!user) throw new HttpException(401, 'User not found');
 
     return this.#issueTokens(user);
+  }
+
+  async me(userId) {
+    const user = await this.repo.findById(userId);
+    if (!user) throw new HttpException(404, 'User not found');
+    return this.#safe(user);
   }
 
   async logout(refreshToken) {
@@ -62,8 +68,8 @@ export class AuthService {
   }
 
   async #issueTokens(user) {
-    const accessToken = signToken({ sub: user.id, email: user.email });
-    const refreshToken = signRefreshToken({ sub: user.id });
+    const accessToken = signToken({ id: user.id, email: user.email });
+    const refreshToken = signRefreshToken({ id: user.id });
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await this.refreshTokenRepo.save(user.id, refreshToken, expiresAt);
     return {

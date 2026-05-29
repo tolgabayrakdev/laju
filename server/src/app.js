@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import productRoutes from './routes/product.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import { env } from './config/env.js';
@@ -9,9 +10,10 @@ import { apiLimiter } from './middlewares/rate-limit.middleware.js';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
+app.use(cookieParser());
 app.use('/api', apiLimiter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));

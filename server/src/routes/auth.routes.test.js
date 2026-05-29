@@ -56,7 +56,7 @@ describe('Auth Routes', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    it('200 ve token çifti döner', async () => {
+    it('200, cookie set edilir ve user döner', async () => {
       service.login.mockResolvedValue(mockTokens);
 
       const res = await request(app)
@@ -64,7 +64,8 @@ describe('Auth Routes', () => {
         .send({ email: 'ali@test.com', password: '123456' });
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockTokens);
+      expect(res.body).toEqual({ user: mockTokens.user });
+      expect(res.headers['set-cookie']).toBeDefined();
     });
 
     it('bilgiler yanlışsa 401 döner', async () => {
@@ -88,15 +89,16 @@ describe('Auth Routes', () => {
   });
 
   describe('POST /api/auth/refresh', () => {
-    it('200 ve yeni token çifti döner', async () => {
+    it('200, cookie yenilenir ve user döner', async () => {
       service.refresh.mockResolvedValue(mockTokens);
 
       const res = await request(app)
         .post('/api/auth/refresh')
-        .send({ refresh_token: 'mock_refresh_token' });
+        .set('Cookie', 'refresh_token=mock_refresh_token');
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockTokens);
+      expect(res.body).toEqual({ user: mockTokens.user });
+      expect(res.headers['set-cookie']).toBeDefined();
     });
 
     it('token geçersizse 401 döner', async () => {
@@ -121,14 +123,15 @@ describe('Auth Routes', () => {
   });
 
   describe('POST /api/auth/logout', () => {
-    it('204 döner', async () => {
+    it('200 ve başarı mesajı döner', async () => {
       service.logout.mockResolvedValue();
 
       const res = await request(app)
         .post('/api/auth/logout')
-        .send({ refresh_token: 'mock_refresh_token' });
+        .set('Cookie', 'refresh_token=mock_refresh_token');
 
-      expect(res.status).toBe(204);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ message: 'Logged out successfully' });
     });
   });
 });

@@ -9,6 +9,7 @@ import SignUp from './pages/auth/sign-up.tsx'
 import ForgotPassword from './pages/auth/forgot-password.tsx'
 import ResetPassword from './pages/auth/reset-password.tsx'
 import AppLayout from './layouts/app-layout.tsx'
+import GlobalLoader from './components/global-loader.tsx'
 import AppIndex from './pages/app/app-index.tsx'
 import Settings from './pages/app/settings.tsx'
 
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider storageKey="vite-ui-theme">
+        <GlobalLoader />
         <RouterProvider router={router} />
       </ThemeProvider>
     </QueryClientProvider>

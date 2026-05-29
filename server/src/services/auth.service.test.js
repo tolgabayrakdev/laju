@@ -21,7 +21,13 @@ describe('AuthService', () => {
   let repo;
   let refreshTokenRepo;
 
-  const mockUser = { id: 1, name: 'Ali', email: 'ali@test.com', password: 'hashed_password', created_at: new Date() };
+  const mockUser = {
+    id: 1,
+    name: 'Ali',
+    email: 'ali@test.com',
+    password: 'hashed_password',
+    created_at: new Date(),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,30 +53,49 @@ describe('AuthService', () => {
       repo.create.mockResolvedValue(mockUser);
       refreshTokenRepo.save.mockResolvedValue({});
 
-      const result = await service.register({ name: 'Ali', email: 'ali@test.com', password: '123456' });
+      const result = await service.register({
+        name: 'Ali',
+        email: 'ali@test.com',
+        password: '123456',
+      });
 
       expect(hashPassword).toHaveBeenCalledWith('123456');
-      expect(repo.create).toHaveBeenCalledWith({ name: 'Ali', email: 'ali@test.com', password: 'hashed_password' });
-      expect(result).toMatchObject({ access_token: 'mock_access_token', refresh_token: 'mock_refresh_token' });
+      expect(repo.create).toHaveBeenCalledWith({
+        name: 'Ali',
+        email: 'ali@test.com',
+        password: 'hashed_password',
+      });
+      expect(result).toMatchObject({
+        access_token: 'mock_access_token',
+        refresh_token: 'mock_refresh_token',
+      });
       expect(result.user).not.toHaveProperty('password');
     });
 
     it('name eksikse 400 fırlatır', async () => {
-      await expect(service.register({ email: 'ali@test.com', password: '123456' })).rejects.toMatchObject({ status: 400 });
+      await expect(
+        service.register({ email: 'ali@test.com', password: '123456' })
+      ).rejects.toMatchObject({ status: 400 });
     });
 
     it('email eksikse 400 fırlatır', async () => {
-      await expect(service.register({ name: 'Ali', password: '123456' })).rejects.toMatchObject({ status: 400 });
+      await expect(service.register({ name: 'Ali', password: '123456' })).rejects.toMatchObject({
+        status: 400,
+      });
     });
 
     it('password eksikse 400 fırlatır', async () => {
-      await expect(service.register({ name: 'Ali', email: 'ali@test.com' })).rejects.toMatchObject({ status: 400 });
+      await expect(service.register({ name: 'Ali', email: 'ali@test.com' })).rejects.toMatchObject({
+        status: 400,
+      });
     });
 
     it('email zaten varsa 409 fırlatır', async () => {
       repo.findByEmail.mockResolvedValue(mockUser);
 
-      await expect(service.register({ name: 'Ali', email: 'ali@test.com', password: '123456' })).rejects.toMatchObject({ status: 409 });
+      await expect(
+        service.register({ name: 'Ali', email: 'ali@test.com', password: '123456' })
+      ).rejects.toMatchObject({ status: 409 });
     });
   });
 
@@ -83,7 +108,10 @@ describe('AuthService', () => {
       const result = await service.login({ email: 'ali@test.com', password: '123456' });
 
       expect(comparePassword).toHaveBeenCalledWith('123456', mockUser.password);
-      expect(result).toMatchObject({ access_token: 'mock_access_token', refresh_token: 'mock_refresh_token' });
+      expect(result).toMatchObject({
+        access_token: 'mock_access_token',
+        refresh_token: 'mock_refresh_token',
+      });
     });
 
     it('email eksikse 400 fırlatır', async () => {
@@ -97,14 +125,18 @@ describe('AuthService', () => {
     it('kullanıcı bulunamazsa 401 fırlatır', async () => {
       repo.findByEmail.mockResolvedValue(undefined);
 
-      await expect(service.login({ email: 'yok@test.com', password: '123456' })).rejects.toMatchObject({ status: 401 });
+      await expect(
+        service.login({ email: 'yok@test.com', password: '123456' })
+      ).rejects.toMatchObject({ status: 401 });
     });
 
     it('şifre yanlışsa 401 fırlatır', async () => {
       repo.findByEmail.mockResolvedValue(mockUser);
       comparePassword.mockResolvedValue(false);
 
-      await expect(service.login({ email: 'ali@test.com', password: 'yanlis' })).rejects.toMatchObject({ status: 401 });
+      await expect(
+        service.login({ email: 'ali@test.com', password: 'yanlis' })
+      ).rejects.toMatchObject({ status: 401 });
     });
   });
 
@@ -119,7 +151,10 @@ describe('AuthService', () => {
       const result = await service.refresh('mock_refresh_token');
 
       expect(refreshTokenRepo.deleteByToken).toHaveBeenCalledWith('mock_refresh_token');
-      expect(result).toMatchObject({ access_token: 'mock_access_token', refresh_token: 'mock_refresh_token' });
+      expect(result).toMatchObject({
+        access_token: 'mock_access_token',
+        refresh_token: 'mock_refresh_token',
+      });
     });
 
     it('DB de token yoksa 401 fırlatır', async () => {
@@ -130,7 +165,9 @@ describe('AuthService', () => {
     });
 
     it('JWT geçersizse 401 fırlatır', async () => {
-      verifyRefreshToken.mockImplementation(() => { throw new Error('invalid'); });
+      verifyRefreshToken.mockImplementation(() => {
+        throw new Error('invalid');
+      });
 
       await expect(service.refresh('bozuk_token')).rejects.toMatchObject({ status: 401 });
     });

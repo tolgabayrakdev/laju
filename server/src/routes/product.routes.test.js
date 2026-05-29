@@ -52,9 +52,7 @@ describe('Product Routes', () => {
       const newProduct = { id: 1, name: 'Kalem', price: 5, stock: 0 };
       service.create.mockResolvedValue(newProduct);
 
-      const res = await request(app)
-        .post('/api/products')
-        .send({ name: 'Kalem', price: 5 });
+      const res = await request(app).post('/api/products').send({ name: 'Kalem', price: 5 });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(newProduct);
@@ -63,9 +61,7 @@ describe('Product Routes', () => {
     it('gerekli alan eksikse 400 döner', async () => {
       service.create.mockRejectedValue(new HttpException(400, 'name and price are required'));
 
-      const res = await request(app)
-        .post('/api/products')
-        .send({ name: 'Kalem' });
+      const res = await request(app).post('/api/products').send({ name: 'Kalem' });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: 'name and price are required' });
@@ -77,9 +73,7 @@ describe('Product Routes', () => {
       const updated = { id: 1, name: 'Kalem', price: 10, stock: 5 };
       service.update.mockResolvedValue(updated);
 
-      const res = await request(app)
-        .put('/api/products/1')
-        .send({ price: 10 });
+      const res = await request(app).put('/api/products/1').send({ price: 10 });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(updated);
@@ -88,9 +82,7 @@ describe('Product Routes', () => {
     it('ürün bulunamazsa 404 döner', async () => {
       service.update.mockRejectedValue(new HttpException(404, 'Product not found'));
 
-      const res = await request(app)
-        .put('/api/products/99')
-        .send({ price: 10 });
+      const res = await request(app).put('/api/products/99').send({ price: 10 });
 
       expect(res.status).toBe(404);
     });

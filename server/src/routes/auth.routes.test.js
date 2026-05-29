@@ -33,11 +33,11 @@ describe('Auth Routes', () => {
     });
 
     it('alan eksikse 400 döner', async () => {
-      service.register.mockRejectedValue(new HttpException(400, 'name, email and password are required'));
+      service.register.mockRejectedValue(
+        new HttpException(400, 'name, email and password are required')
+      );
 
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ email: 'ali@test.com' });
+      const res = await request(app).post('/api/auth/register').send({ email: 'ali@test.com' });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: 'name, email and password are required' });
@@ -81,9 +81,7 @@ describe('Auth Routes', () => {
     it('alan eksikse 400 döner', async () => {
       service.login.mockRejectedValue(new HttpException(400, 'email and password are required'));
 
-      const res = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'ali@test.com' });
+      const res = await request(app).post('/api/auth/login').send({ email: 'ali@test.com' });
 
       expect(res.status).toBe(400);
     });
@@ -104,9 +102,7 @@ describe('Auth Routes', () => {
     it('token geçersizse 401 döner', async () => {
       service.refresh.mockRejectedValue(new HttpException(401, 'Invalid or expired refresh token'));
 
-      const res = await request(app)
-        .post('/api/auth/refresh')
-        .send({ refresh_token: 'gecersiz' });
+      const res = await request(app).post('/api/auth/refresh').send({ refresh_token: 'gecersiz' });
 
       expect(res.status).toBe(401);
       expect(res.body).toEqual({ error: 'Invalid or expired refresh token' });

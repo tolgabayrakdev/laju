@@ -16,11 +16,15 @@ export class RefreshTokenRepository {
   }
 
   findByToken(token) {
-    return db(this.table).where({ token: hashToken(token) }).first();
+    return db(this.table)
+      .where({ token: hashToken(token) })
+      .first();
   }
 
   deleteByToken(token) {
-    return db(this.table).where({ token: hashToken(token) }).delete();
+    return db(this.table)
+      .where({ token: hashToken(token) })
+      .delete();
   }
 
   deleteByUserId(userId) {

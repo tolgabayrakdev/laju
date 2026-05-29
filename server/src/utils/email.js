@@ -12,6 +12,25 @@ function createTransporter() {
   });
 }
 
+export async function sendPasswordChangedEmail(to) {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log(`[DEV] Şifre değiştirildi bildirimi (${to})`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: env.smtp.from,
+    to,
+    subject: 'Şifreniz başarıyla güncellendi',
+    html: `
+      <p>Şifreniz başarıyla güncellenmiştir.</p>
+      <p>Eğer bu değişikliği siz yapmadıysanız lütfen hemen bizimle iletişime geçin.</p>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(to, resetUrl) {
   const transporter = createTransporter();
 

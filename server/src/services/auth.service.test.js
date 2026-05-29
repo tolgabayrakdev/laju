@@ -15,11 +15,12 @@ vi.mock('../utils/password.js', () => ({
 
 vi.mock('../utils/email.js', () => ({
   sendPasswordResetEmail: vi.fn(),
+  sendPasswordChangedEmail: vi.fn(),
 }));
 
 import { signToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
-import { sendPasswordResetEmail } from '../utils/email.js';
+import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utils/email.js';
 
 describe('AuthService', () => {
   let service;
@@ -245,19 +246,21 @@ describe('AuthService', () => {
   });
 
   describe('resetPassword', () => {
-    it('geçerli token ile şifreyi günceller ve token temizler', async () => {
+    it('geçerli token ile şifreyi günceller, token temizler ve bildirim maili gönderir', async () => {
       repo.findByResetToken.mockResolvedValue({
         ...mockUser,
         reset_token_expires: new Date(Date.now() + 60 * 60 * 1000),
       });
       repo.updatePassword.mockResolvedValue();
       repo.clearResetToken.mockResolvedValue();
+      sendPasswordChangedEmail.mockResolvedValue();
 
       await service.resetPassword('gecerlitoken', 'yenisifre123');
 
       expect(hashPassword).toHaveBeenCalledWith('yenisifre123');
       expect(repo.updatePassword).toHaveBeenCalledWith(mockUser.id, 'hashed_password');
       expect(repo.clearResetToken).toHaveBeenCalledWith(mockUser.id);
+      expect(sendPasswordChangedEmail).toHaveBeenCalledWith(mockUser.email);
     });
 
     it('token veya password eksikse 400 fırlatır', async () => {

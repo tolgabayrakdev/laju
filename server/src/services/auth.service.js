@@ -4,7 +4,7 @@ import { RefreshTokenRepository } from '../repositories/refresh-token.repository
 import { HttpException } from '../exceptions/http.exception.js';
 import { signToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
-import { sendPasswordResetEmail } from '../utils/email.js';
+import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utils/email.js';
 import { env } from '../config/env.js';
 
 export class AuthService {
@@ -109,7 +109,8 @@ export class AuthService {
 
     const hashed = await hashPassword(newPassword);
     await this.repo.updatePassword(user.id, hashed);
-    await this.repo.clearResetToken(user.id);
+    await this.repo.clearResetToken(user.id);    
+    sendPasswordChangedEmail(user.email);
   }
 
   async #issueTokens(user) {
